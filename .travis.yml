@@ -20,6 +20,7 @@ install:
   - cpanm --notest Package::DeprecationManager
   - cpanm --notest --installdeps .
   - cpanm --quiet --notest --skip-satisfied Dist::Milla
+  - cpanm --notest Test::Class::Moose::Load
   - cpan-install --coverage   # installs converage prereqs, if enabled
 before_script:
   - coverage-setup
