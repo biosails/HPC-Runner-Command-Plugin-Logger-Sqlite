@@ -1,11 +1,13 @@
 package HPC::Runner::Command::Plugin::Logger::Sqlite;
 
+our $VERSION = '0.01';
+
 use Moose::Role;
 
 use HPC::Runner::Command::Plugin::Logger::Sqlite::Schema;
 use Data::Dumper;
 use Cwd;
-use MooseX::Types::Path::Tiny qw/Path Paths AbsPath AbsFile/;
+#use MooseX::Types::Path::Tiny qw/Path Paths AbsPath AbsFile/;
 
 with 'HPC::Runner::Command::Plugin::Logger::Sqlite::Deploy';
 
@@ -49,8 +51,6 @@ has 'db_file' => (
         my $cwd = getcwd();
         return $cwd . "/hpc-runner-command-plugin-logger-sqlite.db";
     },
-    isa    => AbsFile,
-    coerce => 1,
 );
 
 =head3 submission_id
@@ -73,3 +73,38 @@ has 'submission_id' => (
 =cut
 
 1;
+
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+HPC::Runner::Command::Plugin::Sqlite - Log HPC::Runner workflows to a sqlite DB.
+
+=head1 SYNOPSIS
+
+To submit jobs to a cluster
+
+    hpcrunner.pl submit_jobs --plugins Logger::Sqlite
+
+=head1 DESCRIPTION
+
+HPC::Runner::Command::Plugin::Sqlite - Log HPC::Runner workflows to a sqlite DB.
+
+=head1 AUTHOR
+
+Jillian Rowe E<lt>jillian.e.rowe@gmail.comE<gt>
+
+=head1 COPYRIGHT
+
+Copyright 2016- Jillian Rowe
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+=cut
