@@ -13,12 +13,12 @@ use File::Slurp;
 
 sub construct_001 {
 
+    chdir("$Bin/test001");
     my $t = "$Bin/test001/script/test001.1.sh";
     MooseX::App::ParsedArgv->new(
         argv => [
             "execute_job",       "--infile",
-            $t,                  "--outdir",
-            "$Bin/test001/logs", "--job_plugins",
+            $t,                  "--job_plugins",
             "Logger::Sqlite",    "--job_plugins_opts",
             "submission_id=1"
         ]
@@ -26,18 +26,18 @@ sub construct_001 {
 
     my $test = HPC::Runner::Command->new_with_command();
     $test->logname('slurm_logs');
-    $test->log( $test->init_log );
+    #$test->log( $test->init_log );
     return $test;
 }
 
 sub construct_002 {
 
+    chdir("$Bin/test001");
     my $t = "$Bin/test001/script/test001.1.sh";
     MooseX::App::ParsedArgv->new(
         argv => [
             "submit_jobs",          "--infile",
-            $t,                     "--outdir",
-            "$Bin/test001/logs",    "--hpc_plugins",
+            $t,                     "--hpc_plugins",
             "Dummy,Logger::Sqlite", "--hpc_plugins_opts",
             "clean_db=1"
         ]
@@ -45,7 +45,7 @@ sub construct_002 {
 
     my $test = HPC::Runner::Command->new_with_command();
     $test->logname('slurm_logs');
-    $test->log( $test->init_log );
+    #$test->log( $test->init_log );
     return $test;
 }
 
@@ -54,7 +54,7 @@ sub test_001 : Tags(prep) {
 
     remove_tree("$Bin/test001");
     make_path("$Bin/test001/script");
-    make_path("$Bin/test001/scratch");
+    #make_path("$Bin/test001/scratch");
     my $p =<<EOF;
 #!/bin/bash
 #
