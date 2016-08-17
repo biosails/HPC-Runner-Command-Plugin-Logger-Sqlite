@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 inotify-hookable \
     --watch-directories /home/jillian/Dropbox/projects/perl/HPC-Runner-Command/lib/  \
