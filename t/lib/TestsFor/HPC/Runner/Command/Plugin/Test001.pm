@@ -55,9 +55,28 @@ sub test_001 : Tags(prep) {
     remove_tree("$Bin/test001");
     make_path("$Bin/test001/script");
     make_path("$Bin/test001/scratch");
+    my $p =<<EOF;
+#!/bin/bash
+#
+#SBATCH --share
+#SBATCH --get-user-env
+#SBATCH --job-name=001_job01
+#SBATCH --output=$Bin/logs/2016-08-14-slurm_logs/001_job01.log
+#SBATCH --cpus-per-task=12
 
+cd $Bin/test001
+hpcrunner.pl execute_job \
+	--procs 4 \
+	--infile $Bin/test001/scratch/001_job01.in \
+	--outdir $Bin/test001/scratch \
+	--logname 001_job01 \
+	--process_table $Bin/test001/logs/2016-08-14-slurm_logs/001-process_table.md \
+	--metastr '{"total_batches":3,"tally_commands":"1-1/3","batch_index":"1/3","jobname":"job01","batch":"001","total_processes":3,"commands":1}'
+EOF
     ok(1);
 }
+
+
 
 sub test_002 : Tags(prep) {
     my $test = shift;
