@@ -22,6 +22,8 @@ install:
   - cpanm --quiet --notest --skip-satisfied Dist::Milla
   - cpanm --notest Test::Class::Moose::Load
   - cpan-install --coverage   # installs converage prereqs, if enabled
+  - git clone https://github.com/jerowe/HPC-Runner-Command
+  - cd HPC-Runner-Command && milla install
 before_script:
   - coverage-setup
 script:
