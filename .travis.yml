@@ -8,8 +8,9 @@ matrix:
       env: COVERAGE=1
   allow_failures:
     - perl: "blead"
-sudo: false
+sudo: true
 before_install:
+  - sudo apt-get install -y sqlite3
   - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
   - source ~/travis-perl-helpers/init
   - build-perl
