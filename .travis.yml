@@ -17,13 +17,12 @@ before_install:
   - build-dist
   - cd $BUILD_DIR             # $BUILD_DIR is set by the build-dist command
 install:
+  - cpanm git@github.com:jerowe/HPC-Runner-Command.git
   - cpanm --notest Package::DeprecationManager
   - cpanm --notest --installdeps .
   - cpanm --quiet --notest --skip-satisfied Dist::Milla
   - cpanm --notest Test::Class::Moose::Load
   - cpan-install --coverage   # installs converage prereqs, if enabled
-  - git clone https://github.com/jerowe/HPC-Runner-Command
-  - cd HPC-Runner-Command && milla install
 before_script:
   - coverage-setup
 script:
