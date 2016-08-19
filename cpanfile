@@ -6,6 +6,7 @@ requires 'DBIx::Class::Schema', '0';
 requires 'Data::Dumper',        '0';
 requires 'DateTime',            '0';
 requires 'JSON::XS',            '0';
+requires 'List::Uniq',          '0';
 requires 'Moose::Role',         '0';
 requires 'HPC::Runner',         '0';
 
