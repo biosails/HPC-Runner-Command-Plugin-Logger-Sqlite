@@ -27,6 +27,7 @@ sub construct_001 {
     my $test = HPC::Runner::Command->new_with_command();
     $test->logname('slurm_logs');
     #$test->log( $test->init_log );
+    system("git tag -d ".$test->version);
     return $test;
 }
 
@@ -45,6 +46,7 @@ sub construct_002 {
 
     my $test = HPC::Runner::Command->new_with_command();
     $test->logname('slurm_logs');
+    system("git tag -d ".$test->version);
     #$test->log( $test->init_log );
     return $test;
 }
