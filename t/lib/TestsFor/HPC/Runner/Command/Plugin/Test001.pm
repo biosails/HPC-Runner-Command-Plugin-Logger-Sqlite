@@ -11,10 +11,39 @@ use Capture::Tiny ':all';
 use Slurp;
 use File::Slurp;
 
+sub make_test_dir{
+
+    my $test_dir;
+
+    if(exists $ENV{'TMP'}){
+        $test_dir = $ENV{TMP}."/hpcrunner/test001";
+    }
+    else{
+        $test_dir = "/tmp/hpcrunner/test001";
+    }
+
+    make_path($test_dir);
+
+    chdir($test_dir);
+    if(can_run('git') && !-d $test_dir."/.git"){
+        system('git init');
+    }
+
+    return $test_dir;
+}
+
+sub test_shutdown {
+
+    my $test_dir = make_test_dir;
+    chdir("$Bin");
+    remove_tree($test_dir);
+}
+
 sub construct_001 {
 
-    chdir("$Bin/test001");
-    my $t = "$Bin/test001/script/test001.1.sh";
+    my $test_dir = make_test_dir;
+
+    my $t = "$test_dir/script/test001.1.sh";
     MooseX::App::ParsedArgv->new(
         argv => [
             "execute_job",       "--infile",
@@ -26,15 +55,15 @@ sub construct_001 {
 
     my $test = HPC::Runner::Command->new_with_command();
     $test->logname('slurm_logs');
-    #$test->log( $test->init_log );
-    system("git tag -d ".$test->version);
     return $test;
 }
 
 sub construct_002 {
 
-    chdir("$Bin/test001");
-    my $t = "$Bin/test001/script/test001.1.sh";
+    my $test_dir = make_test_dir;
+
+    chdir("$test_dir");
+    my $t = "$test_dir/script/test001.1.sh";
     MooseX::App::ParsedArgv->new(
         argv => [
             "submit_jobs",          "--infile",
@@ -46,44 +75,23 @@ sub construct_002 {
 
     my $test = HPC::Runner::Command->new_with_command();
     $test->logname('slurm_logs');
-    system("git tag -d ".$test->version);
-    #$test->log( $test->init_log );
     return $test;
 }
 
 sub test_001 : Tags(prep) {
-    my $test = shift;
 
-    remove_tree("$Bin/test001");
-    make_path("$Bin/test001/script");
-    #make_path("$Bin/test001/scratch");
-    my $p =<<EOF;
-#!/bin/bash
-#
-#SBATCH --share
-#SBATCH --get-user-env
-#SBATCH --job-name=001_job01
-#SBATCH --output=$Bin/logs/2016-08-14-slurm_logs/001_job01.log
-#SBATCH --cpus-per-task=12
+    my $test_dir = make_test_dir;
+    make_path("$test_dir/script");
 
-cd $Bin/test001
-hpcrunner.pl execute_job \
-	--procs 4 \
-	--infile $Bin/test001/scratch/001_job01.in \
-	--outdir $Bin/test001/scratch \
-	--logname 001_job01 \
-	--process_table $Bin/test001/logs/2016-08-14-slurm_logs/001-process_table.md \
-	--metastr '{"total_batches":3,"tally_commands":"1-1/3","batch_index":"1/3","jobname":"job01","batch":"001","total_processes":3,"commands":1}'
-EOF
     ok(1);
 }
 
 
 
 sub test_002 : Tags(prep) {
-    my $test = shift;
 
-    open( my $fh, ">$Bin/test001/script/test001.1.sh" );
+    my $test_dir = make_test_dir;
+    open( my $fh, ">$test_dir/script/test001.1.sh" );
     print $fh <<EOF;
 echo "hello world from job 1" && sleep 5
 
@@ -98,10 +106,14 @@ EOF
 
     close($fh);
 
+    system('git add -A');
+    system('git commit -m "test commit"');
+
     ok(1);
 }
 
 sub test_003 : Tags(submit_jobs) {
+
     my $test = construct_002();
 
     $test->gen_load_plugins();
