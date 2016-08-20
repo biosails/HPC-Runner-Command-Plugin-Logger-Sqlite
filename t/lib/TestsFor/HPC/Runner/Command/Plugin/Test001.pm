@@ -15,22 +15,43 @@ sub make_test_dir{
 
     my $test_dir;
 
+    my @chars = ('a'..'z', 'A'..'Z', 0..9);
+    my $string = join '', map { @chars[rand @chars]  } 1 .. 8;
+
     if(exists $ENV{'TMP'}){
-        $test_dir = $ENV{TMP}."/hpcrunner/test001";
+        $test_dir = $ENV{TMP}."/hpcrunner/$string";
     }
     else{
-        $test_dir = "/tmp/hpcrunner/test001";
+        $test_dir = "/tmp/hpcrunner/$string";
     }
 
     make_path($test_dir);
+    make_path("$test_dir/script");
 
     chdir($test_dir);
     if(can_run('git') && !-d $test_dir."/.git"){
         system('git init');
     }
 
+    open( my $fh, ">$test_dir/script/test001.1.sh" );
+    print $fh <<EOF;
+echo "hello world from job 1" && sleep 5
+
+echo "hello again from job 2" && sleep 5
+
+echo "goodbye from job 3"
+
+#NOTE job_tags=hello,world
+echo "hello again from job 3" && sleep 5
+
+EOF
+
+    close($fh);
+
+
     return $test_dir;
 }
+
 
 sub test_shutdown {
 
@@ -78,39 +99,16 @@ sub construct_002 {
     return $test;
 }
 
-sub test_001 : Tags(prep) {
 
-    my $test_dir = make_test_dir;
-    make_path("$test_dir/script");
+#sub test_002 : Tags(prep) {
 
-    ok(1);
-}
+    #my $test_dir = make_test_dir;
 
+    #system('git add -A');
+    #system('git commit -m "test commit"');
 
-
-sub test_002 : Tags(prep) {
-
-    my $test_dir = make_test_dir;
-    open( my $fh, ">$test_dir/script/test001.1.sh" );
-    print $fh <<EOF;
-echo "hello world from job 1" && sleep 5
-
-echo "hello again from job 2" && sleep 5
-
-echo "goodbye from job 3"
-
-#NOTE job_tags=hello,world
-echo "hello again from job 3" && sleep 5
-
-EOF
-
-    close($fh);
-
-    system('git add -A');
-    system('git commit -m "test commit"');
-
-    ok(1);
-}
+    #ok(1);
+#}
 
 sub test_003 : Tags(submit_jobs) {
 
@@ -163,6 +161,7 @@ sub test_005 : Tags(execute_jobs) {
 
     populate_jobs($test);
     populate_tasks($test);
+
     #I don't do any actual tests here - just want to make sure it all works
     #query_related($test);
 }
