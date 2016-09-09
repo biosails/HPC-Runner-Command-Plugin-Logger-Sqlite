@@ -1,0 +1,10 @@
+2016/09/09 18:40:11: DEBUG Enqueuing command:
+	echo "hello world from job 1" && sleep 5
+ 2016/09/09 18:40:11: DEBUG Enqueuing command:
+	echo "hello again from job 2" && sleep 5
+ 2016/09/09 18:40:11: DEBUG Enqueuing command:
+	echo "goodbye from job 3"
+ 2016/09/09 18:40:11: DEBUG Enqueuing command:
+	#NOTE job_tags=hello,world
+echo "hello again from job 3" && sleep 5
+ 
