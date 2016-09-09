@@ -54,7 +54,7 @@ around 'create_plugin_str' => sub {
 
     push(
         @{ $self->job_plugins },
-        'HPC::Runner::Command::execute_job::Plugin::Logger::Sqlite'
+        'Logger::Sqlite'
     );
     $self->job_plugins_opts->{submission_id} = $self->submission_id;
     my $val = $self->$orig(@_);

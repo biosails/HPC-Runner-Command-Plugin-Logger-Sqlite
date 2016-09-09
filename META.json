@@ -4,7 +4,7 @@
       "Jillian Rowe <jillian.e.rowe@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Milla version v1.0.16, Dist::Zilla version 6.006, CPAN::Meta::Converter version 2.150001",
+   "generated_by" : "Dist::Milla version v1.0.16, Dist::Zilla version 6.007, CPAN::Meta::Converter version 2.150001",
    "license" : [
       "perl_5"
    ],
@@ -42,7 +42,9 @@
             "DBIx::Class::Schema" : "0",
             "Data::Dumper" : "0",
             "DateTime" : "0",
+            "HPC::Runner" : "0",
             "JSON::XS" : "0",
+            "List::Uniq" : "0",
             "Moose::Role" : "0",
             "base" : "0",
             "perl" : "5.008005",
@@ -63,20 +65,20 @@
             "Test::Class::Moose" : "0",
             "Test::Class::Moose::Load" : "0",
             "Test::Class::Moose::Runner" : "0",
-            "Test::More" : "0.96"
+            "Test::More" : "0"
          }
       }
    },
    "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
-         "web" : "https://github.com/jerowe/HPC-Runner-Command-Plugin/issues"
+         "web" : "https://github.com/jerowe/HPC-Runner-Command-Plugin-Logger-Sqlite/issues"
       },
-      "homepage" : "https://github.com/jerowe/HPC-Runner-Command-Plugin",
+      "homepage" : "https://github.com/jerowe/HPC-Runner-Command-Plugin-Logger-Sqlite",
       "repository" : {
          "type" : "git",
-         "url" : "https://github.com/jerowe/HPC-Runner-Command-Plugin.git",
-         "web" : "https://github.com/jerowe/HPC-Runner-Command-Plugin"
+         "url" : "https://github.com/jerowe/HPC-Runner-Command-Plugin-Logger-Sqlite.git",
+         "web" : "https://github.com/jerowe/HPC-Runner-Command-Plugin-Logger-Sqlite"
       }
    },
    "version" : "0.01",

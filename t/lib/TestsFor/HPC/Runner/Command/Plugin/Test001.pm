@@ -29,9 +29,6 @@ sub make_test_dir{
     make_path("$test_dir/script");
 
     chdir($test_dir);
-    if(can_run('git') && !-d $test_dir."/.git"){
-        system('git init');
-    }
 
     open( my $fh, ">$test_dir/script/test001.1.sh" );
     print $fh <<EOF;
@@ -48,6 +45,11 @@ EOF
 
     close($fh);
 
+    if(can_run('git') && !-d $test_dir."/.git"){
+        system('git init');
+        system('git add -A');
+        system('git commit -m "test commit"');
+    }
 
     return $test_dir;
 }
@@ -100,15 +102,13 @@ sub construct_002 {
 }
 
 
-#sub test_002 : Tags(prep) {
+sub test_002 : Tags(prep) {
 
-    #my $test_dir = make_test_dir;
+    my $test_dir = make_test_dir;
 
-    #system('git add -A');
-    #system('git commit -m "test commit"');
 
-    #ok(1);
-#}
+    ok(1);
+}
 
 sub test_003 : Tags(submit_jobs) {
 
@@ -142,7 +142,7 @@ sub try_plugin_strings {
     my $plugin_str = $test->create_plugin_str;
 
     my $expect1
-        = "--job_plugins HPC::Runner::Command::execute_job::Plugin::Logger::Sqlite";
+        = "--job_plugins Logger::Sqlite";
     my $expect2 = "--job_plugins_opts submission_id=1";
 
     like( $plugin_str, qr/$expect1/, 'Plugin string matches' );
@@ -163,7 +163,7 @@ sub test_005 : Tags(execute_jobs) {
     populate_tasks($test);
 
     #I don't do any actual tests here - just want to make sure it all works
-    #query_related($test);
+    query_related($test);
 }
 
 sub populate_jobs {
@@ -188,14 +188,14 @@ sub populate_tasks {
 
     my $results = $test->schema->resultset('Task')->search();
 
-    #while ( my $res = $results->next ) {
+    while ( my $res = $results->next ) {
         #print "tasks_pi " . $res->task_pi . "\n";
-        #print "job_fk " . $res->job_fk . "\n";
+        ##print "job_fk " . $res->job_fk . "\n";
         #print "cmdpid " . $res->pid . "\n";
         #print "start_time " . $res->start_time . "\n";
         #print "exit_time " . $res->exit_time. "\n";
         #print "exit_code " . $res->exit_code. "\n";
-    #}
+    }
 
     is( $results->count, 4, "Correct number of tasks" );
     ok(1);
@@ -204,7 +204,7 @@ sub populate_tasks {
 sub query_related {
     my $test = shift;
 
-    $ENV{DBIC_TRACE} = 1;
+    #$ENV{DBIC_TRACE} = 1;
 
     $test->schema->storage->debug(1);
 
@@ -214,7 +214,8 @@ sub query_related {
     $results->result_class('DBIx::Class::ResultClass::HashRefInflator');
 
     while ( my $res = $results->next ) {
-        #print Dumper($res);
+        print "Here is a result!\n";
+        print Dumper($res);
     }
 
     ok(1);
