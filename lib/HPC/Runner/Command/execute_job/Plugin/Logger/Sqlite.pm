@@ -69,6 +69,7 @@ around 'run_mce' => sub {
             start_time       => $start_time,
             exit_time        => $start_time,
             job_scheduler_id => $self->job_scheduler_id,
+            jobs_meta => $self->metastr,
         }
     );
 

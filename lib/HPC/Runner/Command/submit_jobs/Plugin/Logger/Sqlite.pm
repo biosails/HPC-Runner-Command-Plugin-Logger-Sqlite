@@ -27,7 +27,8 @@ around 'execute' => sub {
     my $res = $self->schema->resultset('Submission')
         ->create( { total_processes => 0, total_batches => 0 } );
     my $id = $res->submission_pi;
-    #$self->log->info("Saving to sqlite db as submission id : $id");
+
+    $self->app_log->info("Saving to sqlite db as submission id : $id");
     $self->submission_id($id);
 
     $self->$orig(@_);

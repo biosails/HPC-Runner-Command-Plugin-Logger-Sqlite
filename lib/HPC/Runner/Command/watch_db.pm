@@ -2,14 +2,50 @@ package HPC::Runner::Command::watch_db;
 
 use MooseX::App::Command;
 use Data::Dumper;
+use Log::Log4perl qw(:easy);
 
 extends 'HPC::Runner::Command';
 
-#with 'HPC::Runner::Command::Utils::Base';
-#with 'HPC::Runner::Command::Utils::Log';
-
 command_short_description 'Watch the sqlitedb';
 command_long_description 'Watch the sqlitedb for one or more submission ids';
+
+has 'total_processes' => (
+    traits  => ['Number'],
+    is      => 'rw',
+    isa     => 'Num',
+    default => 0,
+    handles => {
+        set_total_processes => 'set',
+        add_total_processes => 'add',
+    },
+);
+
+option 'exit_on_fail' => (
+    traits  => ['Bool'],
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+    documentation => 'Fail if any jobs have an exit code besides 0 - whether all tasks have completed or not',
+);
+
+has 'log' => (
+    is      => 'rw',
+    default => sub {
+        my $self = shift;
+
+        Log::Log4perl->init( \ <<'EOT');
+  log4perl.category = DEBUG, Screen
+  log4perl.appender.Screen = \
+      Log::Log4perl::Appender::ScreenColoredLevels
+  log4perl.appender.Screen.layout = \
+      Log::Log4perl::Layout::PatternLayout
+  log4perl.appender.Screen.layout.ConversionPattern = \
+      [%d] %m %n
+EOT
+        return get_logger();
+        }
+
+);
 
 sub BUILD {
     my $self = shift;
@@ -21,63 +57,89 @@ sub BUILD {
 sub execute {
     my $self = shift;
 
-    print  "Here we are!\n";
-    print "Submission Id : ".$self->submission_id."\n";
+    if($self->submission_id){
+        $self->log->info("Watching Submission Id : " . $self->submission_id);
+    }
+    else{
+        $self->log->info("No submission id specified. We will watch the whole database");
+    }
 
-    $self->query_job;
-    #$self->query_related;
+    $self->query_submissions;
 
 }
 
 sub query_task {
-    my $self = shift;
+    my $self    = shift;
+    my $task_rs = shift;
 
-    my $results = $self->schema->resultset('Task')->search();
 
-    while ( my $res = $results->next ) {
-        #print "tasks_pi " . $res->task_pi . "\n";
-        ##print "job_fk " . $res->job_fk . "\n";
-        #print "cmdpid " . $res->pid . "\n";
-        #print "start_time " . $res->start_time . "\n";
-        #print "exit_time " . $res->exit_time. "\n";
-        #print "exit_code " . $res->exit_code. "\n";
+    #If exit on fail we don't care if we have completed the number of processes - just fail
+    if ($self->exit_on_fail){
+        $self->check_exit_code($task_rs);
     }
 
+    if ($task_rs->count != $self->total_processes){
+        #We have
+        return;
+    }
+    elsif($task_rs->count == $self->total_processes){
+        $self->log->info("We have completed ".$self->total_processes." tasks. Exiting successfully");
+        exit 0;
+    }
+
+}
+
+sub check_exit_code {
+    my $self = shift;
+    my $task_rs = shift;
+
+    my $exit_codes = $task_rs->get_column('exit_code');
+
+    while ( my $res = $task_rs->next ) {
+        if ($res->exit_code != 0){
+            $self->log->error("A task has failed! ".$res->task_pi);
+            exit 1;
+        }
+    }
 }
 
 sub query_job {
-    my $self = shift;
+    my $self   = shift;
+    my $job_rs = shift;
 
-    my $results = $self->schema->resultset('Job')->search();
-
-    my $related = $results->search_related('submission_fk', {'submission_pi' => 1});
-
-    $related->result_class('DBIx::Class::ResultClass::HashRefInflator');
-
-    while ( my $res = $related->next ) {
-        print "Here is a result!\n";
-        print Dumper($res);
-    }
-    return $related;
-
-    #while ( my $res = $results->next ) {
-        #print "jobs_pi " . $res->job_pi . "\n";
-        #print "start_time " . $res->start_time . "\n";
-        #print "end_time " . $res->exit_time. "\n";
+    #$job_rs->result_class('DBIx::Class::ResultClass::HashRefInflator');
+    #while ( my $res = $job_rs->next ) {
+        #print Dumper($res);
     #}
-
 }
-sub query_submissions{
+
+#TODO Add many submissions
+
+sub query_submissions {
     my $self = shift;
 
-    my $results = $self->schema->resultset('Submission')->search();
+    my $results;
 
-    #while ( my $res = $results->next ) {
-        #print "submitted " . $res->submission_pi . "\n";
-        #print "total_processes " . $res->total_processes . "\n";
-        #print "job_stats " . $res->submission_meta . "\n";
-    #}
-    #
+    if ($self->submission_id){
+        $results = $self->schema->resultset('Submission')
+            ->search( { 'submission_pi' => 1 } );
+    }
+    else{
+        $results = $self->schema->resultset('Submission')
+            ->search();
+    }
+
+    my $jobs  = $results->search_related('jobs');
+    my $tasks = $jobs->search_related('tasks');
+
+    while ( my $res = $results->next ) {
+        $self->add_total_processes( $res->total_processes );
+    }
+
+    $self->query_job($jobs);
+
+    $self->query_task($tasks);
+
 }
 
 sub query_related {
