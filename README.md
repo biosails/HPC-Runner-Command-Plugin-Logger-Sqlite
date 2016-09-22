@@ -26,7 +26,11 @@ HPC::Runner::Command::Plugin::Sqlite - Log HPC::Runner workflows to a sqlite DB.
 
 To submit jobs to a cluster
 
-    hpcrunner.pl submit_jobs --plugins Logger::Sqlite
+    hpcrunner.pl submit_jobs --hpc_plugins Logger::Sqlite
+
+To execute jobs on a single node
+
+    hpcrunner.pl execute_jobs --job_plugins Logger::Sqlite
 
 # DESCRIPTION
 

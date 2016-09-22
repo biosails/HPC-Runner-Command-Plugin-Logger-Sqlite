@@ -7,7 +7,6 @@ use Moose::Role;
 use HPC::Runner::Command::Plugin::Logger::Sqlite::Schema;
 use Data::Dumper;
 use Cwd;
-#use MooseX::Types::Path::Tiny qw/Path Paths AbsPath AbsFile/;
 
 with 'HPC::Runner::Command::Plugin::Logger::Sqlite::Deploy';
 
