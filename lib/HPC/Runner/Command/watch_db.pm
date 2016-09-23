@@ -72,7 +72,7 @@ sub execute {
     }
 
     while (1){
-        $self->log->debug("Watching again...")
+        $self->log->debug("Watching again...");
         $self->query_submissions;
         sleep ($self->sleep_interval);
     }
