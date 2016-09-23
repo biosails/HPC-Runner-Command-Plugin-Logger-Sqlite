@@ -31,8 +31,8 @@ option 'exit_on_fail' => (
 option 'sleep_interval' => (
     is => 'rw',
     isa => 'Int',
-    default => 120,
-    documentation => 'Sleep interval in seconds to query sqlite db',
+    default => 30,
+    documentation => 'Sleep interval in seconds to query sqlite db. For software testing you should leave as is. For longer running analyses you probably want to increase this.',
 );
 
 has 'log' => (
