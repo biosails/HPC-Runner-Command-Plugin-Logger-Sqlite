@@ -87,6 +87,9 @@ sub query_task {
         $self->check_exit_code($task_rs);
     }
 
+    my $count = $task_rs->count;
+    $self->log->debug("Tasks in DB are ".$count);
+
     if ($task_rs->count != $self->total_processes){
         #We have
         return;
@@ -94,6 +97,15 @@ sub query_task {
     elsif($task_rs->count == $self->total_processes){
         $self->log->info("We have completed ".$self->total_processes." tasks. Exiting successfully");
         exit 0;
+    }
+    elsif($task_rs->count >= $self->total_processes){
+        $self->log->info("More tasks were completed than were in the databases ".$self->total_processes." tasks.");
+        $self->log->info("Were jobs restarted manually?");
+        $self->log->info("Exiting successfully");
+        exit 0;
+    }
+    else{
+        $self->log->debug("Not sure how we got here...");
     }
 
 }
@@ -133,7 +145,7 @@ sub query_submissions {
         $self->add_total_processes( $res->total_processes );
     }
 
-    $self->query_job($jobs);
+    #$self->query_job($jobs);
 
     $self->query_task($tasks);
 
