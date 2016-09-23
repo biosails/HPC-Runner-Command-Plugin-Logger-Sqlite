@@ -28,6 +28,13 @@ option 'exit_on_fail' => (
     documentation => 'Fail if any jobs have an exit code besides 0 - whether all tasks have completed or not',
 );
 
+option 'sleep_interval' => (
+    is => 'rw',
+    isa => 'Int',
+    default => 120,
+    documentation => 'Sleep interval in seconds to query sqlite db',
+);
+
 has 'log' => (
     is      => 'rw',
     default => sub {
@@ -64,14 +71,15 @@ sub execute {
         $self->log->info("No submission id specified. We will watch the whole database");
     }
 
-    $self->query_submissions;
-
+    while (1){
+        $self->query_submissions;
+        sleep ($self->sleep_interval);
+    }
 }
 
 sub query_task {
     my $self    = shift;
     my $task_rs = shift;
-
 
     #If exit on fail we don't care if we have completed the number of processes - just fail
     if ($self->exit_on_fail){
@@ -103,18 +111,6 @@ sub check_exit_code {
     }
 }
 
-sub query_job {
-    my $self   = shift;
-    my $job_rs = shift;
-
-    #$job_rs->result_class('DBIx::Class::ResultClass::HashRefInflator');
-    #while ( my $res = $job_rs->next ) {
-        #print Dumper($res);
-    #}
-}
-
-#TODO Add many submissions
-
 sub query_submissions {
     my $self = shift;
 
@@ -140,6 +136,18 @@ sub query_submissions {
 
     $self->query_task($tasks);
 
+}
+
+#TODO To keep or not to keep?
+
+sub query_job {
+    my $self   = shift;
+    my $job_rs = shift;
+
+    #$job_rs->result_class('DBIx::Class::ResultClass::HashRefInflator');
+    #while ( my $res = $job_rs->next ) {
+        #print Dumper($res);
+    #}
 }
 
 sub query_related {
