@@ -31,7 +31,7 @@ option 'exit_on_fail' => (
 option 'sleep_interval' => (
     is => 'rw',
     isa => 'Int',
-    default => 30,
+    default => 10,
     documentation => 'Sleep interval in seconds to query sqlite db. For software testing you should leave as is. For longer running analyses you probably want to increase this.',
 );
 
@@ -71,9 +71,19 @@ sub execute {
         $self->log->info("No submission id specified. We will watch the whole database");
     }
 
+    my $results = $self->query_submissions;
+    $self->total_tasks($results);
+
     while (1){
         $self->log->debug("Watching again...");
-        $self->query_submissions;
+
+        my $results = $self->query_submissions;
+
+        my $jobs  = $results->search_related('jobs');
+        my $tasks = $jobs->search_related('tasks');
+
+        $self->query_task($tasks);
+
         sleep ($self->sleep_interval);
     }
 }
@@ -124,6 +134,15 @@ sub check_exit_code {
     }
 }
 
+sub total_tasks {
+    my $self = shift;
+    my $results = shift;
+
+    while ( my $res = $results->next ) {
+        $self->add_total_processes( $res->total_processes );
+    }
+}
+
 sub query_submissions {
     my $self = shift;
 
@@ -138,16 +157,8 @@ sub query_submissions {
             ->search();
     }
 
-    my $jobs  = $results->search_related('jobs');
-    my $tasks = $jobs->search_related('tasks');
+    return $results;
 
-    while ( my $res = $results->next ) {
-        $self->add_total_processes( $res->total_processes );
-    }
-
-    #$self->query_job($jobs);
-
-    $self->query_task($tasks);
 
 }
 
