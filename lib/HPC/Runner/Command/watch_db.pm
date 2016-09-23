@@ -35,6 +35,15 @@ option 'sleep_interval' => (
     documentation => 'Sleep interval in seconds to query sqlite db. For software testing you should leave as is. For longer running analyses you probably want to increase this.',
 );
 
+option 'verbose' => (
+    traits  => ['Bool'],
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+    documentation => 'Enable verbose logging',
+);
+
+
 has 'log' => (
     is      => 'rw',
     default => sub {
@@ -75,7 +84,10 @@ sub execute {
     $self->total_tasks($results);
 
     while (1){
-        $self->log->debug("Watching again...");
+
+        if($self->verbose){
+            $self->log->debug("Watching again...");
+        }
 
         my $results = $self->query_submissions;
 
@@ -92,13 +104,14 @@ sub query_task {
     my $self    = shift;
     my $task_rs = shift;
 
+    if($self->verbose){
+        $self->log->debug("Tasks in DB are ".$task_rs->count);
+    }
+
     #If exit on fail we don't care if we have completed the number of processes - just fail
     if ($self->exit_on_fail){
         $self->check_exit_code($task_rs);
     }
-
-    my $count = $task_rs->count;
-    $self->log->debug("Tasks in DB are ".$count);
 
     if ($task_rs->count != $self->total_processes){
         #We have
