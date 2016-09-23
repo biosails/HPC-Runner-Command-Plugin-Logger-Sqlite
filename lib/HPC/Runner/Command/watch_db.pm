@@ -6,8 +6,8 @@ use Log::Log4perl qw(:easy);
 
 extends 'HPC::Runner::Command';
 
-command_short_description 'Watch the sqlitedb';
-command_long_description 'Watch the sqlitedb for one or more submission ids';
+command_short_description 'Watch the sqlitedb and exit when job submissions are complete.';
+command_long_description 'Watch the sqlitedb for one or more submission ids. This is only really useful for testing. In a real world application it is probably best to just have the scheduler email you on completion, unless you are submitting more jobs than you want emails.';
 
 has 'total_processes' => (
     traits  => ['Number'],
