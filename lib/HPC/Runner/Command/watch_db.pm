@@ -5,6 +5,7 @@ use Data::Dumper;
 use Log::Log4perl qw(:easy);
 
 extends 'HPC::Runner::Command';
+with 'HPC::Runner::Command::Plugin::Logger::Sqlite';
 
 command_short_description 'Watch the sqlitedb and exit when job submissions are complete.';
 command_long_description 'Watch the sqlitedb for one or more submission ids. This is only really useful for testing. In a real world application it is probably best to just have the scheduler email you on completion, unless you are submitting more jobs than you want emails.';
@@ -43,41 +44,14 @@ option 'verbose' => (
     documentation => 'Enable verbose logging',
 );
 
-
-has 'log' => (
-    is      => 'rw',
-    default => sub {
-        my $self = shift;
-
-        Log::Log4perl->init( \ <<'EOT');
-  log4perl.category = DEBUG, Screen
-  log4perl.appender.Screen = \
-      Log::Log4perl::Appender::ScreenColoredLevels
-  log4perl.appender.Screen.layout = \
-      Log::Log4perl::Layout::PatternLayout
-  log4perl.appender.Screen.layout.ConversionPattern = \
-      [%d] %m %n
-EOT
-        return get_logger();
-        }
-
-);
-
-sub BUILD {
-    my $self = shift;
-
-    $self->gen_load_plugins;
-    $self->job_load_plugins;
-}
-
 sub execute {
     my $self = shift;
 
     if($self->submission_id){
-        $self->log->info("Watching Submission Id : " . $self->submission_id);
+        $self->app_log->info("Watching Submission Id : " . $self->submission_id);
     }
     else{
-        $self->log->info("No submission id specified. We will watch the whole database");
+        $self->app_log->info("No submission id specified. We will watch the whole database");
     }
 
     my $results = $self->query_submissions;
@@ -86,7 +60,7 @@ sub execute {
     while (1){
 
         if($self->verbose){
-            $self->log->debug("Watching again...");
+            $self->app_log->debug("Watching again...");
         }
 
         my $results = $self->query_submissions;
@@ -105,7 +79,7 @@ sub query_task {
     my $task_rs = shift;
 
     if($self->verbose){
-        $self->log->debug("Tasks in DB are ".$task_rs->count);
+        $self->app_log->debug("Tasks in DB are ".$task_rs->count);
     }
 
     #If exit on fail we don't care if we have completed the number of processes - just fail
@@ -118,17 +92,17 @@ sub query_task {
         return;
     }
     elsif($task_rs->count == $self->total_processes){
-        $self->log->info("We have completed ".$self->total_processes." tasks. Exiting successfully");
+        $self->app_log->info("We have completed ".$self->total_processes." tasks. Exiting successfully");
         exit 0;
     }
     elsif($task_rs->count >= $self->total_processes){
-        $self->log->info("More tasks were completed than were in the databases ".$self->total_processes." tasks.");
-        $self->log->info("Were jobs restarted manually?");
-        $self->log->info("Exiting successfully");
+        $self->app_log->info("More tasks were completed than were in the databases ".$self->total_processes." tasks.");
+        $self->app_log->info("Were jobs restarted manually?");
+        $self->app_log->info("Exiting successfully");
         exit 0;
     }
     else{
-        $self->log->debug("Not sure how we got here...");
+        $self->app_log->debug("Not sure how we got here...");
     }
 
 }
@@ -141,7 +115,7 @@ sub check_exit_code {
 
     while ( my $res = $task_rs->next ) {
         if ($res->exit_code != 0){
-            $self->log->error("A task has failed! ".$res->task_pi);
+            $self->app_log->error("A task has failed! ".$res->task_pi);
             exit 1;
         }
     }
@@ -161,9 +135,13 @@ sub query_submissions {
 
     my $results;
 
-    if ($self->submission_id){
+    if($self->project){
         $results = $self->schema->resultset('Submission')
-            ->search( { 'submission_pi' => 1 } );
+            ->search( { 'project' => $self->project } );
+    }
+    elsif ($self->submission_id){
+        $results = $self->schema->resultset('Submission')
+            ->search( { 'submission_pi' => $self->submission_id } );
     }
     else{
         $results = $self->schema->resultset('Submission')
@@ -187,23 +165,24 @@ sub query_job {
     #}
 }
 
-sub query_related {
-    my $self = shift;
-
-    #$ENV{DBIC_TRACE} = 1;
-
-    $self->schema->storage->debug(1);
-
-    my $results = $self->schema->resultset('Submission')
-        ->search( {}, { 'prefetch' => { jobs => 'tasks' } } );
-
-    $results->result_class('DBIx::Class::ResultClass::HashRefInflator');
-
-    while ( my $res = $results->next ) {
-        print "Here is a result!\n";
-        print Dumper($res);
-    }
-
-}
+# sub query_related {
+#     my $self = shift;
+#
+#     #$ENV{DBIC_TRACE} = 1;
+#
+#     print "In query related\n";
+#     $self->schema->storage->debug(1);
+#
+#     my $results = $self->schema->resultset('Submission')
+#         ->search( {}, { 'prefetch' => { jobs => 'tasks' } } );
+#
+#     $results->result_class('DBIx::Class::ResultClass::HashRefInflator');
+#
+#     while ( my $res = $results->next ) {
+#         print "Here is a result!\n";
+#         print Dumper($res);
+#     }
+#
+# }
 
 1;

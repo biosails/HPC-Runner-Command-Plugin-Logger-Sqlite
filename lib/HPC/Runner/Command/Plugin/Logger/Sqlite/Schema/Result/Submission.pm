@@ -29,6 +29,11 @@ __PACKAGE__->table("submission");
   is_auto_increment: 1
   is_nullable: 0
 
+=head2 project
+
+  data_type: 'text'
+  is_nullable: 1
+
 =head2 submission_meta
 
   data_type: 'text'
@@ -44,17 +49,26 @@ __PACKAGE__->table("submission");
   data_type: 'integet'
   is_nullable: 0
 
+=head2 submission_time
+
+  data_type: 'text'
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
   "submission_pi",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  "project",
+  { data_type => "text", is_nullable => 1 },
   "submission_meta",
   { data_type => "text", is_nullable => 1 },
   "total_processes",
   { data_type => "integer", is_nullable => 0 },
   "total_batches",
   { data_type => "integet", is_nullable => 0 },
+  "submission_time",
+  { data_type => "text", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -87,8 +101,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-09 12:42:21
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TSx0/1yN/lb+OXVo52kZcg
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2017-03-28 14:40:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:e9yr8/SPDCmvVbTqLXW6PA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

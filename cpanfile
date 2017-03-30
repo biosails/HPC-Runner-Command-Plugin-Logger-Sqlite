@@ -1,25 +1,41 @@
+requires 'Cwd';
+requires 'DBIx::Class::Core';
+requires 'DBIx::Class::Schema';
+requires 'Data::Dumper';
+requires 'DateTime';
+requires 'HPC::Runner';
+requires 'HPC::Runner::Command';
+requires 'JSON::XS';
+requires 'List::Uniq';
+requires 'Log::Log4perl';
+requires 'Moose::Role';
+requires 'MooseX::App::Command';
+requires 'base';
 requires 'perl', '5.008005';
+requires 'strict';
+requires 'utf8';
+requires 'warnings';
 
-requires 'Cwd',                 '0';
-requires 'DBIx::Class::Core',   '0';
-requires 'DBIx::Class::Schema', '0';
-requires 'Data::Dumper',        '0';
-requires 'DateTime',            '0';
-requires 'JSON::XS',            '0';
-requires 'List::Uniq',          '0';
-requires 'Moose::Role',         '0';
-requires 'HPC::Runner',         '0';
+on configure => sub {
+    requires 'Module::Build::Tiny', '0.034';
+};
 
 on test => sub {
-    requires 'Capture::Tiny',              '0';
-    requires 'File::Path',                 '0';
-    requires 'File::Slurp',                '0';
-    requires 'FindBin',                    '0';
-    requires 'HPC::Runner::Command',       '0';
-    requires 'IPC::Cmd',                   '0';
-    requires 'Slurp',                      '0';
-    requires 'Test::Class::Moose',         '0';
-    requires 'Test::Class::Moose::Load',   '0';
-    requires 'Test::Class::Moose::Runner', '0';
-    requires 'Test::More',                 '0';
+    requires 'Capture::Tiny';
+    requires 'File::Path';
+    requires 'File::Slurp';
+    requires 'File::Spec::Functions';
+    requires 'FindBin';
+    requires 'HPC::Runner::Command';
+    requires 'IPC::Cmd';
+    requires 'Slurp';
+    requires 'Test::Class::Moose';
+    requires 'Test::Class::Moose::Load';
+    requires 'Test::Class::Moose::Runner';
+    requires 'Test::More';
+};
+
+on develop => sub {
+    requires 'Dist::Milla', 'v1.0.16';
+    requires 'Test::Pod', '1.41';
 };

@@ -3,15 +3,17 @@ package HPC::Runner::Command::Plugin::Logger::Sqlite::Deploy;
 use Moose::Role;
 
 has 'clean_db' => (
-    is => 'rw',
-    isa => 'Bool',
+    is      => 'rw',
+    isa     => 'Bool',
     default => 0
 );
 
 sub deploy_schema {
     my $self = shift;
 
-    $self->deploy_schema_drop_tables;
+    if ( $self->clean_db ) {
+        $self->deploy_schema_drop_tables;
+    }
     $self->deploy_schema_create_tables;
 }
 
@@ -21,20 +23,22 @@ sub deploy_schema_create_tables {
     my $dbh = $self->schema->storage->dbh;
     ###Create Tables
 
-    my $sql =<<EOF;
+    my $sql = <<EOF;
 
 CREATE TABLE IF NOT EXISTS submission (
   submission_pi INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  project text,
   submission_meta text,
   total_processes integer NOT NULL,
-  total_batches integet NOT NULL
+  total_batches integet NOT NULL,
+  submission_time text NOT NULL
 );
 
 EOF
 
     $dbh->do($sql);
 
-    $sql =<<EOF;
+    $sql = <<EOF;
 CREATE TABLE IF NOT EXISTS jobs (
   job_pi INTEGER PRIMARY KEY NOT NULL,
   submission_fk integer NOT NULL,
@@ -43,10 +47,10 @@ CREATE TABLE IF NOT EXISTS jobs (
   exit_time text NOT NULL,
   duration text,
   jobs_meta text,
+  job_name text,
   FOREIGN KEY (submission_fk) REFERENCES submission(submission_pi) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 EOF
-
 
     $dbh->do($sql);
 
@@ -55,25 +59,25 @@ CREATE INDEX IF NOT EXISTS jobs_idx_submission_id ON jobs (submission_fk);
 EOF
     $dbh->do($sql);
 
-    $sql =<<EOF;
+    $sql = <<EOF;
 
 CREATE TABLE IF NOT EXISTS tasks (
   task_pi INTEGER PRIMARY KEY NOT NULL,
   job_fk integer NOT NULL,
   pid integer NOT NULL,
   start_time text NOT NULL,
-  exit_time text NOT NULL,
-  duration text NOT NULL,
-  exit_code integer NOT NULL,
+  exit_time text,
+  duration text,
+  exit_code integer,
   tasks_meta text,
-  job_tags text,
+  task_tags text,
   FOREIGN KEY (job_fk) REFERENCES jobs(job_pi) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 EOF
 
     $dbh->do($sql);
 
-    $sql =<<EOF;
+    $sql = <<EOF;
 CREATE INDEX IF NOT EXISTS tasks_idx_job_pi ON tasks (job_fk);
 EOF
 
@@ -83,8 +87,7 @@ EOF
 sub deploy_schema_drop_tables {
     my $self = shift;
 
-    my $dbh = $self->schema->storage->dbh;
-    my $clean_db = 1;
+    my $dbh      = $self->schema->storage->dbh;
 
     print "We are cleaning the db!\n" if $self->clean_db;
 
@@ -98,7 +101,7 @@ EOF
 
     $dbh->do($sql) if $self->clean_db;
 
-    $sql =<<EOF;
+    $sql = <<EOF;
 --
 -- Table: jobs
 --
@@ -107,7 +110,7 @@ EOF
 
     $dbh->do($sql) if $self->clean_db;
 
-    $sql =<<EOF;
+    $sql = <<EOF;
 --
 -- Table: tasks
 --

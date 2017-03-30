@@ -3,6 +3,7 @@ package HPC::Runner::Command::execute_job::Plugin::Logger::Sqlite;
 use Moose::Role;
 use Data::Dumper;
 use DateTime;
+use JSON;
 
 with 'HPC::Runner::Command::Plugin::Logger::Sqlite';
 
@@ -64,17 +65,29 @@ around 'run_mce' => sub {
     my $hms        = $dt1->hms();
     my $start_time = "$ymd $hms";
 
+    my $job_meta = {};
+
+    if ( $self->metastr ) {
+        $job_meta = decode_json( $self->metastr );
+    }
+
+    if ( !exists $job_meta->{jobname} ) {
+        $job_meta->{jobname} = 'undefined';
+    }
+
     my $res = $self->schema->resultset('Job')->create(
-        {   submission_fk    => $self->submission_id,
+        {
+            submission_fk    => $self->submission_id,
             start_time       => $start_time,
             exit_time        => $start_time,
             job_scheduler_id => $self->job_scheduler_id,
-            jobs_meta => $self->metastr,
+            jobs_meta        => $self->metastr,
+            job_name         => $job_meta->{jobname}
         }
     );
 
     my $id = $res->job_pi;
-    $self->job_id( $id );
+    $self->job_id($id);
 
     $self->$orig(@_);
 
@@ -83,39 +96,30 @@ around 'run_mce' => sub {
     $hms = $dt2->hms();
     my $end_time = "$ymd $hms";
     my $duration = $dt2 - $dt1;
-    my $format
-        = DateTime::Format::Duration->new( pattern =>
-            '%Y years, %m months, %e days, %H hours, %M minutes, %S seconds'
-        );
+    my $format   = DateTime::Format::Duration->new( pattern =>
+          '%e days, %H hours, %M minutes, %S seconds' );
 
     $duration = $format->format_duration($duration);
 
     $res->update( { exit_time => $end_time, duration => $duration } );
 };
 
-#tasks_pi INTEGER PRIMARY KEY NOT NULL,
-#job_pi integer NOT NULL,
-#pid integer NOT NULL,
-#start_time text NOT NULL,
-#exit_time text NOT NULL,
-#duration text NOT NULL,
-#exit_code integer NOT NULL,
-#tasks_meta text,
-#job_tags text,
+around 'start_command_log' => sub {
+    my $orig   = shift;
+    my $self   = shift;
+    my $cmdpid = shift;
 
-#$VAR1 = {
-#'job_tags' => 'hello, world',
-#'duration' => '0 years, 00 months, 0 days, 00 hours, 00 minutes, 05 seconds',
-#'schedulerid' => '1234',
-#'jobname' => 'job',
-#'exitcode' => 0,
-#'cmdpid' => 15228,
-#'exit_time' => '2016-08-09 12:06:57'
-#};
+    my $res = $self->schema->resultset('Task')->create(
+        {
+            job_fk     => $self->job_id,
+            pid        => $cmdpid,
+            start_time => $self->table_data->{start_time},
+        }
+    );
 
-#after 'log_table' => sub {
-    #my $self = shift;
-#};
+    $self->$orig($cmdpid);
+
+};
 
 around 'log_table' => sub {
     my $orig = shift;
@@ -123,16 +127,30 @@ around 'log_table' => sub {
 
     $self->$orig(@_);
 
-    #job_tags => $self->table_data->{job_tags}
+    my $tags = "";
+    if ( exists $self->table_data->{task_tags} ) {
+        my $task_tags = $self->table_data->{task_tags};
+        if ($task_tags) {
+            $tags = $task_tags;
+        }
+    }
 
-    my $res = $self->schema->resultset('Task')->create({
-        job_fk => $self->job_id,
-        pid => $self->table_data->{cmdpid},
-        start_time => $self->table_data->{start_time},
-        exit_time => $self->table_data->{exit_time},
-        duration => $self->table_data->{duration},
-        exit_code => $self->table_data->{exitcode},
-    });
+    my $started_task = $self->schema->resultset('Task')->find(
+        {
+            job_fk     => $self->job_id,
+            pid        => $self->table_data->{cmdpid},
+            start_time => $self->table_data->{start_time},
+        }
+    );
+
+    $started_task->update(
+        {
+            exit_time => $self->table_data->{exit_time},
+            duration  => $self->table_data->{duration},
+            exit_code => $self->table_data->{exitcode},
+            task_tags => $tags,
+        }
+    );
 };
 
 1;

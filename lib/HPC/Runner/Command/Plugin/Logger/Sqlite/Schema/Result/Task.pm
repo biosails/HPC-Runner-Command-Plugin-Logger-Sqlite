@@ -48,24 +48,24 @@ __PACKAGE__->table("tasks");
 =head2 exit_time
 
   data_type: 'text'
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 duration
 
   data_type: 'text'
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 exit_code
 
   data_type: 'integer'
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 tasks_meta
 
   data_type: 'text'
   is_nullable: 1
 
-=head2 job_tags
+=head2 task_tags
 
   data_type: 'text'
   is_nullable: 1
@@ -82,14 +82,14 @@ __PACKAGE__->add_columns(
   "start_time",
   { data_type => "text", is_nullable => 0 },
   "exit_time",
-  { data_type => "text", is_nullable => 0 },
+  { data_type => "text", is_nullable => 1 },
   "duration",
-  { data_type => "text", is_nullable => 0 },
+  { data_type => "text", is_nullable => 1 },
   "exit_code",
-  { data_type => "integer", is_nullable => 0 },
+  { data_type => "integer", is_nullable => 1 },
   "tasks_meta",
   { data_type => "text", is_nullable => 1 },
-  "job_tags",
+  "task_tags",
   { data_type => "text", is_nullable => 1 },
 );
 
@@ -123,8 +123,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-09 12:43:57
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:FQvbrH1FDIP7/0PAXn4fLA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2017-03-28 14:40:32
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:R31ymUSo+XWr/fK3t2c9nw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

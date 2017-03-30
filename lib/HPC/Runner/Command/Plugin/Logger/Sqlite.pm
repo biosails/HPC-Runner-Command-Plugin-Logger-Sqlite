@@ -7,8 +7,30 @@ use Moose::Role;
 use HPC::Runner::Command::Plugin::Logger::Sqlite::Schema;
 use Data::Dumper;
 use Cwd;
+use Log::Log4perl qw(:easy);
 
 with 'HPC::Runner::Command::Plugin::Logger::Sqlite::Deploy';
+
+##Application log
+has 'app_log' => (
+    is      => 'rw',
+    lazy => 1,
+    default => sub {
+        my $self = shift;
+        my $log_conf = q(
+log4perl.category = DEBUG, Screen
+log4perl.appender.Screen = \
+    Log::Log4perl::Appender::ScreenColoredLevels
+log4perl.appender.Screen.layout = \
+    Log::Log4perl::Layout::PatternLayout
+log4perl.appender.Screen.layout.ConversionPattern = \
+    [%d] %m %n
+        );
+
+        Log::Log4perl->init( \$log_conf);
+        return get_logger();
+      }
+);
 
 =head1 HPC::Runner::Command::Plugin::Logger::Sqlite;
 
@@ -91,9 +113,26 @@ To execute jobs on a single node
 
     hpcrunner.pl execute_jobs --job_plugins Logger::Sqlite
 
+Generate a summary report
+
+  hpcrunner.pl stats
+  hpcrunner.pl stats --jobname gatk
+  hpcrunner.pl stats --project Sequencing1
+  hpcrunner.pl stats --project Sequencing1 --jobname gatk_haplotypecaller
+
+Generate a longer report
+
+  hpcrunner.pl stats
+  hpcrunner.pl stats --long/-l --jobname gatk
+  hpcrunner.pl stats --long/-l --project Sequencing1
+  hpcrunner.pl stats --long/-l --project Sequencing1 --jobname gatk_haplotypecaller
+
+
 =head1 DESCRIPTION
 
 HPC::Runner::Command::Plugin::Sqlite - Log HPC::Runner workflows to a sqlite DB.
+
+This plugin requires sqlite3 in the path.
 
 =head1 AUTHOR
 
