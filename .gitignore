@@ -6,3 +6,4 @@ MYMETA.*
 !META.json
 /.prove
 hpc-runner-command-plugin-logger-sqlite.db
+/t/test001
