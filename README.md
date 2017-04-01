@@ -32,9 +32,25 @@ To execute jobs on a single node
 
     hpcrunner.pl execute_jobs --job_plugins Logger::Sqlite
 
+Generate a summary report
+
+    hpcrunner.pl stats
+    hpcrunner.pl stats --jobname gatk
+    hpcrunner.pl stats --project Sequencing1
+    hpcrunner.pl stats --project Sequencing1 --jobname gatk_haplotypecaller
+
+Generate a longer report
+
+    hpcrunner.pl stats
+    hpcrunner.pl stats --long/-l --jobname gatk
+    hpcrunner.pl stats --long/-l --project Sequencing1
+    hpcrunner.pl stats --long/-l --project Sequencing1 --jobname gatk_haplotypecaller
+
 # DESCRIPTION
 
 HPC::Runner::Command::Plugin::Sqlite - Log HPC::Runner workflows to a sqlite DB.
+
+This plugin requires sqlite3 in the path.
 
 # AUTHOR
 
