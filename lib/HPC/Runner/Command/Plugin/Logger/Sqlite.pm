@@ -1,6 +1,6 @@
 package HPC::Runner::Command::Plugin::Logger::Sqlite;
 
-our $VERSION = '0.0.3';
+our $VERSION = '0.0.4';
 
 use Moose::Role;
 
