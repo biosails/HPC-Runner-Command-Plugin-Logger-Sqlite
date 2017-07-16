@@ -75,6 +75,7 @@ around 'run_mce' => sub {
         $job_meta->{jobname} = 'undefined';
     }
 
+    ##TODO update for running in single node mode
     my $res = $self->schema->resultset('Job')->create(
         {
             submission_fk    => $self->submission_id,
@@ -118,7 +119,6 @@ around 'start_command_log' => sub {
     );
 
     $self->$orig($cmdpid);
-
 };
 
 around 'log_table' => sub {
