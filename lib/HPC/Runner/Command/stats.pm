@@ -225,7 +225,6 @@ sub iter_jobs_summary {
 
     map { $self->iter_tasks_summary( $job->{job_name}, $_ ) }
       @{ $job->{tasks} };
-
 }
 
 sub iter_tasks_summary {
