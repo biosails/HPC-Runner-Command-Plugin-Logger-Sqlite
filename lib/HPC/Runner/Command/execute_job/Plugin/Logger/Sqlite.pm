@@ -54,16 +54,26 @@ Each start, stop time for each task gets logged
 
 ##TODO Add Moose object with starttime, endtime, duration
 
+## Not entirely sure I want to keep this...
+
 around 'run_mce' => sub {
     my $orig = shift;
     my $self = shift;
 
-    $self->deploy_schema;
+    my $dt1 = DateTime->now( time_zone => 'local' );
+    my $res = $self->create_sqlite_job_row("$dt1");
 
-    my $dt1        = DateTime->now( time_zone => 'local' );
-    my $ymd        = $dt1->ymd();
-    my $hms        = $dt1->hms();
-    my $start_time = "$ymd $hms";
+    $self->$orig(@_);
+
+    $self->update_sqlite_job_row( $res, $dt1 );
+};
+
+sub create_sqlite_job_row {
+    my $self       = shift;
+    my $start_time = shift;
+
+    my $lock_file = $self->sqlite_set_lock;
+    $self->deploy_schema;
 
     my $job_meta = {};
 
@@ -78,32 +88,43 @@ around 'run_mce' => sub {
     ##TODO update for running in single node mode
     my $res = $self->schema->resultset('Job')->create(
         {
-            submission_fk    => $self->submission_id,
+            submission_fk    => $self->sqlite_submission_id,
             start_time       => $start_time,
             exit_time        => $start_time,
             job_scheduler_id => $self->job_scheduler_id,
             jobs_meta        => $self->metastr,
-            job_name         => $job_meta->{jobname}
+            jobname          => $job_meta->{jobname}
         }
     );
 
     my $id = $res->job_pi;
     $self->job_id($id);
 
-    $self->$orig(@_);
+    $self->lock_file->remove;
+    $self->lock_file($lock_file);
 
-    my $dt2 = DateTime->now( time_zone => 'local' );
-    $ymd = $dt2->ymd();
-    $hms = $dt2->hms();
-    my $end_time = "$ymd $hms";
-    my $duration = $dt2 - $dt1;
-    my $format   = DateTime::Format::Duration->new( pattern =>
-          '%e days, %H hours, %M minutes, %S seconds' );
+    return $res;
+}
+
+sub update_sqlite_job_row {
+    my $self = shift;
+    my $res  = shift;
+    my $dt1  = shift;
+
+    my $lock_file = $self->sqlite_set_lock;
+    my $dt2       = DateTime->now( time_zone => 'local' );
+    my $end_time  = "$dt2";
+    my $duration  = $dt2 - $dt1;
+    my $format =
+      DateTime::Format::Duration->new(
+        pattern => '%e days, %H hours, %M minutes, %S seconds' );
 
     $duration = $format->format_duration($duration);
 
     $res->update( { exit_time => $end_time, duration => $duration } );
-};
+    $self->lock_file->remove;
+    $self->lock_file($lock_file);
+}
 
 around 'start_command_log' => sub {
     my $orig   = shift;

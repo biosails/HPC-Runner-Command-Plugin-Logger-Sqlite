@@ -71,7 +71,7 @@ sub construct_001 {
             "execute_job",    "--infile",
             $t,               "--job_plugins",
             "Logger::Sqlite", "--job_plugins_opts",
-            "submission_id=1"
+            "sqlite_submission_id=1"
         ]
     );
 
@@ -135,7 +135,7 @@ sub try_submission_ids {
     #print "job_stats " . $res->submission_meta . "\n";
     #}
 
-    is( $test->submission_id, 1, "Submit jobs submission id matches" );
+    is( $test->sqlite_submission_id, 1, "Submit jobs submission id matches" );
 }
 
 sub try_plugin_strings {
@@ -144,7 +144,7 @@ sub try_plugin_strings {
     my $plugin_str = $test->create_plugin_str;
 
     my $expect1 = "--job_plugins Logger::Sqlite";
-    my $expect2 = "--job_plugins_opts submission_id=1";
+    my $expect2 = "--job_plugins_opts sqlite_submission_id=1";
 
     like( $plugin_str, qr/$expect1/, 'Plugin string matches' );
     like( $plugin_str, qr/$expect2/, 'Plugin opts matches' );

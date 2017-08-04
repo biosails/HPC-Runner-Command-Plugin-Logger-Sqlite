@@ -8,39 +8,24 @@ use HPC::Runner::Command::Plugin::Logger::Sqlite::Schema;
 use Data::Dumper;
 use Cwd;
 use Log::Log4perl qw(:easy);
+use File::Spec;
 
 with 'HPC::Runner::Command::Plugin::Logger::Sqlite::Deploy';
-
-##Application log
-has 'app_log' => (
-    is      => 'rw',
-    lazy => 1,
-    default => sub {
-        my $self = shift;
-        my $log_conf = q(
-log4perl.category = DEBUG, Screen
-log4perl.appender.Screen = \
-    Log::Log4perl::Appender::ScreenColoredLevels
-log4perl.appender.Screen.layout = \
-    Log::Log4perl::Layout::PatternLayout
-log4perl.appender.Screen.layout.ConversionPattern = \
-    [%d] %m %n
-        );
-
-        Log::Log4perl->init( \$log_conf);
-        return get_logger();
-      }
-);
+with 'HPC::Runner::Command::Logger::JSON';
+with 'HPC::Runner::Command::execute_job::Logger::Lock';
 
 =head1 HPC::Runner::Command::Plugin::Logger::Sqlite;
 
-Base class for HPC::Runner::Command::submit_jobs::Plugin::Logger::Sqlite and HPC::Runner::Command::execute_job::Plugin::Sqlite
+Base class for HPC::Runner::Command::submit_jobs::Plugin::Logger::Sqlite and
+HPC::Runner::Command::execute_job::Plugin::Sqlite
 
 =cut
 
 =head2 Attributes
 
 =cut
+
+has 'submission_obj' => ( is => 'rw', );
 
 =head3 schema
 
@@ -52,8 +37,8 @@ has 'schema' => (
     is      => 'rw',
     default => sub {
         my $self = shift;
-        my $schema
-            = HPC::Runner::Command::Plugin::Logger::Sqlite::Schema->connect(
+        my $schema =
+          HPC::Runner::Command::Plugin::Logger::Sqlite::Schema->connect(
             'dbi:SQLite:' . $self->db_file );
         return $schema;
     },
@@ -67,10 +52,13 @@ Path to sqlite3 db file. If the file doesn't exist sqlite3 will create it.
 =cut
 
 has 'db_file' => (
-    is      => 'rw',
-    default => sub {
+    is       => 'rw',
+    lazy     => 1,
+    required => 0,
+    default  => sub {
         my $cwd = getcwd();
-        return $cwd . "/hpc-runner-command-plugin-logger-sqlite.db";
+        return File::Spec->catdir( $cwd,
+            "hpc-runner-command-plugin-logger-sqlite.db" );
     },
 );
 
@@ -80,18 +68,34 @@ This is the ID for the entire hpcrunner.pl submit_jobs submission, not the indiv
 
 =cut
 
-has 'submission_id' => (
+has 'sqlite_submission_id' => (
     is        => 'rw',
     isa       => 'Str|Int',
     lazy      => 1,
     default   => '',
-    predicate => 'has_submission_id',
-    clearer   => 'clear_submission_id'
+    predicate => 'has_sqlite_submission_id',
+    clearer   => 'clear_sqlite_submission_id'
 );
 
 =head2 Subroutines
 
 =cut
+
+sub sqlite_set_lock {
+    my $self      = shift;
+
+    my $lock_file = $self->lock_file;
+    my $cwd       = getcwd();
+    my $new_lock =
+      File::Spec->catdir( $cwd, '.hpcrunner-data', '.sqlite-lock' );
+
+    $self->lock_file($new_lock);
+
+    $self->check_lock;
+    $self->write_lock;
+
+    return $lock_file;
+}
 
 1;
 
@@ -116,16 +120,16 @@ To execute jobs on a single node
 Generate a summary report
 
   hpcrunner.pl stats
-  hpcrunner.pl stats --jobname gatk
-  hpcrunner.pl stats --project Sequencing1
-  hpcrunner.pl stats --project Sequencing1 --jobname gatk_haplotypecaller
+  hpcrunner.pl stats sqlite --jobname gatk
+  hpcrunner.pl stats sqlite --project Sequencing1
+  hpcrunner.pl stats sqlite --project Sequencing1 --jobname gatk_haplotypecaller
 
 Generate a longer report
 
-  hpcrunner.pl stats
-  hpcrunner.pl stats --long/-l --jobname gatk
-  hpcrunner.pl stats --long/-l --project Sequencing1
-  hpcrunner.pl stats --long/-l --project Sequencing1 --jobname gatk_haplotypecaller
+  hpcrunner.pl stats sqlite
+  hpcrunner.pl stats sqlite --long/-l --jobname gatk
+  hpcrunner.pl stats sqlite --long/-l --project Sequencing1
+  hpcrunner.pl stats sqlite --long/-l --project Sequencing1 --jobname gatk_haplotypecaller
 
 
 =head1 DESCRIPTION
