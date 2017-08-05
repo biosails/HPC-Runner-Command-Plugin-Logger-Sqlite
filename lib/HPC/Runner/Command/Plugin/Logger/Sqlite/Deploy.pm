@@ -39,15 +39,21 @@ EOF
     $dbh->do($sql);
 
     $sql = <<EOF;
-CREATE TABLE IF NOT EXISTS jobs (
-  job_pi INTEGER PRIMARY KEY NOT NULL,
+
+CREATE TABLE IF NOT EXISTS tasks (
+  task_pi INTEGER PRIMARY KEY NOT NULL,
   submission_fk integer NOT NULL,
   job_scheduler_id text,
+  hostname text,
+  jobname text,
+  pid integer NOT NULL,
   start_time text NOT NULL,
-  exit_time text NOT NULL,
+  exit_time text,
   duration text,
-  jobs_meta text,
-  job_name text,
+  exit_code integer,
+  task_id integer,
+  tasks_meta text,
+  task_tags text,
   FOREIGN KEY (submission_fk) REFERENCES submission(submission_pi) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 EOF
@@ -55,30 +61,7 @@ EOF
     $dbh->do($sql);
 
     $sql = <<EOF;
-CREATE INDEX IF NOT EXISTS jobs_idx_submission_id ON jobs (submission_fk);
-EOF
-    $dbh->do($sql);
-
-    $sql = <<EOF;
-
-CREATE TABLE IF NOT EXISTS tasks (
-  task_pi INTEGER PRIMARY KEY NOT NULL,
-  job_fk integer NOT NULL,
-  pid integer NOT NULL,
-  start_time text NOT NULL,
-  exit_time text,
-  duration text,
-  exit_code integer,
-  tasks_meta text,
-  task_tags text,
-  FOREIGN KEY (job_fk) REFERENCES jobs(job_pi) ON DELETE NO ACTION ON UPDATE NO ACTION
-);
-EOF
-
-    $dbh->do($sql);
-
-    $sql = <<EOF;
-CREATE INDEX IF NOT EXISTS tasks_idx_job_pi ON tasks (job_fk);
+CREATE INDEX IF NOT EXISTS tasks_idx_submission_pi ON tasks (submission_fk);
 EOF
 
     $dbh->do($sql);
@@ -97,15 +80,6 @@ sub deploy_schema_drop_tables {
 -- Table: submission
 --
 DROP TABLE IF EXISTS submission;
-EOF
-
-    $dbh->do($sql) if $self->clean_db;
-
-    $sql = <<EOF;
---
--- Table: jobs
---
-DROP TABLE IF EXISTS jobs;
 EOF
 
     $dbh->do($sql) if $self->clean_db;

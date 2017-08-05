@@ -34,123 +34,54 @@ has 'job_id' => (
 
 =cut
 
-=head3 after log_table
-
-Log the table data to the sqlite DB
-
-Each start, stop time for the whole batch gets logged
-
-Each start, stop time for each task gets logged
-
-=cut
-
-#$sql =<<EOF;
-#CREATE TABLE IF NOT EXISTS jobs (
-#jobs_pi INTEGER PRIMARY KEY NOT NULL,
-#submission_id integer NOT NULL,
-#start_time varchar(20) NOT NULL,
-#exit_time varchar(20) NOT NULL,
-#jobs_meta text,
-
-##TODO Add Moose object with starttime, endtime, duration
-
-around 'run_mce' => sub {
+around 'create_json_task' => sub {
     my $orig = shift;
     my $self = shift;
 
-    $self->deploy_schema;
+    ##TODO This should go in Build
 
-    my $dt1        = DateTime->now( time_zone => 'local' );
-    my $ymd        = $dt1->ymd();
-    my $hms        = $dt1->hms();
-    my $start_time = "$ymd $hms";
+    $self->deploy_schema_with_lock;
+    my $task_obj = $self->$orig(@_);
 
-    my $job_meta = {};
-
-    if ( $self->metastr ) {
-        $job_meta = decode_json( $self->metastr );
-    }
-
-    if ( !exists $job_meta->{jobname} ) {
-        $job_meta->{jobname} = 'undefined';
-    }
-
-    ##TODO update for running in single node mode
-    my $res = $self->schema->resultset('Job')->create(
+    my $lock_file = $self->sqlite_set_lock;
+    my $res      = $self->schema->resultset('Task')->create(
         {
-            submission_fk    => $self->submission_id,
-            start_time       => $start_time,
-            exit_time        => $start_time,
-            job_scheduler_id => $self->job_scheduler_id,
-            jobs_meta        => $self->metastr,
-            job_name         => $job_meta->{jobname}
+            submission_fk => $self->sqlite_submission_id,
+            pid           => $task_obj->{pid},
+            start_time    => $task_obj->{start_time},
+            # task_id       => $task_obj->{task_id},
+            jobname       => $task_obj->{jobname},
+            hostname      => $self->hostname,
         }
     );
+    $self->submission_obj($res);
 
-    my $id = $res->job_pi;
-    $self->job_id($id);
+    $self->lock_file->remove;
+    $self->lock_file($lock_file);
 
-    $self->$orig(@_);
-
-    my $dt2 = DateTime->now( time_zone => 'local' );
-    $ymd = $dt2->ymd();
-    $hms = $dt2->hms();
-    my $end_time = "$ymd $hms";
-    my $duration = $dt2 - $dt1;
-    my $format   = DateTime::Format::Duration->new( pattern =>
-          '%e days, %H hours, %M minutes, %S seconds' );
-
-    $duration = $format->format_duration($duration);
-
-    $res->update( { exit_time => $end_time, duration => $duration } );
+    return $task_obj;
 };
 
-around 'start_command_log' => sub {
-    my $orig   = shift;
-    my $self   = shift;
-    my $cmdpid = shift;
-
-    my $res = $self->schema->resultset('Task')->create(
-        {
-            job_fk     => $self->job_id,
-            pid        => $cmdpid,
-            start_time => $self->table_data->{start_time},
-        }
-    );
-
-    $self->$orig($cmdpid);
-};
-
-around 'log_table' => sub {
+around 'update_json_task' => sub {
     my $orig = shift;
     my $self = shift;
 
-    $self->$orig(@_);
+    my $task_obj  = $self->$orig(@_);
 
-    my $tags = "";
-    if ( exists $self->table_data->{task_tags} ) {
-        my $task_tags = $self->table_data->{task_tags};
-        if ($task_tags) {
-            $tags = $task_tags;
-        }
-    }
-
-    my $started_task = $self->schema->resultset('Task')->find(
+    my $lock_file = $self->sqlite_set_lock;
+    $self->submission_obj->update(
         {
-            job_fk     => $self->job_id,
-            pid        => $self->table_data->{cmdpid},
-            start_time => $self->table_data->{start_time},
+            exit_time => $task_obj->{exit_time},
+            duration  => $task_obj->{duration},
+            exit_code => $task_obj->{exit_code},
+            task_tags => $task_obj->{task_tags},
         }
     );
 
-    $started_task->update(
-        {
-            exit_time => $self->table_data->{exit_time},
-            duration  => $self->table_data->{duration},
-            exit_code => $self->table_data->{exitcode},
-            task_tags => $tags,
-        }
-    );
+    $self->lock_file->remove;
+    $self->lock_file($lock_file);
+
+    return $task_obj;
 };
 
 1;
