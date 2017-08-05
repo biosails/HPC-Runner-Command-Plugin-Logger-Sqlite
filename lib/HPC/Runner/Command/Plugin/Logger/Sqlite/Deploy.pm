@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   exit_time text,
   duration text,
   exit_code integer,
+  task_id integer,
   tasks_meta text,
   task_tags text,
   FOREIGN KEY (submission_fk) REFERENCES submission(submission_pi) ON DELETE NO ACTION ON UPDATE NO ACTION

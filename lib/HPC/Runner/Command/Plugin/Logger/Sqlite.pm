@@ -82,7 +82,7 @@ has 'sqlite_submission_id' => (
 =cut
 
 sub sqlite_set_lock {
-    my $self      = shift;
+    my $self = shift;
 
     my $lock_file = $self->lock_file;
     my $cwd       = getcwd();
@@ -95,6 +95,16 @@ sub sqlite_set_lock {
     $self->write_lock;
 
     return $lock_file;
+}
+
+sub deploy_schema_with_lock {
+    my $self      = shift;
+
+    my $lock_file = $self->sqlite_set_lock;
+    $self->deploy_schema;
+
+    $self->lock_file->remove;
+    $self->lock_file($lock_file);
 }
 
 1;

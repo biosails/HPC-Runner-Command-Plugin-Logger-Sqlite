@@ -29,11 +29,26 @@ __PACKAGE__->table("tasks");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 job_fk
+=head2 submission_fk
 
   data_type: 'integer'
   is_foreign_key: 1
   is_nullable: 0
+
+=head2 job_scheduler_id
+
+  data_type: 'text'
+  is_nullable: 1
+
+=head2 hostname
+
+  data_type: 'text'
+  is_nullable: 1
+
+=head2 jobname
+
+  data_type: 'text'
+  is_nullable: 1
 
 =head2 pid
 
@@ -75,8 +90,14 @@ __PACKAGE__->table("tasks");
 __PACKAGE__->add_columns(
   "task_pi",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "job_fk",
+  "submission_fk",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  "job_scheduler_id",
+  { data_type => "text", is_nullable => 1 },
+  "hostname",
+  { data_type => "text", is_nullable => 1 },
+  "jobname",
+  { data_type => "text", is_nullable => 1 },
   "pid",
   { data_type => "integer", is_nullable => 0 },
   "start_time",
@@ -107,24 +128,24 @@ __PACKAGE__->set_primary_key("task_pi");
 
 =head1 RELATIONS
 
-=head2 job_fk
+=head2 submission_fk
 
 Type: belongs_to
 
-Related object: L<HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Job>
+Related object: L<HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Submission>
 
 =cut
 
 __PACKAGE__->belongs_to(
-  "job_fk",
-  "HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Job",
-  { job_pi => "job_fk" },
+  "submission_fk",
+  "HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Submission",
+  { submission_pi => "submission_fk" },
   { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-03 23:01:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:+TDshUYeN4kcLt/cfsc5Yg
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-03 23:05:20
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lUpi9P9BiFtkcxeG9Lmc/g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

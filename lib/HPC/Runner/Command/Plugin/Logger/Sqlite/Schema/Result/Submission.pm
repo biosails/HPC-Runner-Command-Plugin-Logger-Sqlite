@@ -85,24 +85,24 @@ __PACKAGE__->set_primary_key("submission_pi");
 
 =head1 RELATIONS
 
-=head2 jobs
+=head2 tasks
 
 Type: has_many
 
-Related object: L<HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Job>
+Related object: L<HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Task>
 
 =cut
 
 __PACKAGE__->has_many(
-  "jobs",
-  "HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Job",
+  "tasks",
+  "HPC::Runner::Command::Plugin::Logger::Sqlite::Schema::Result::Task",
   { "foreign.submission_fk" => "self.submission_pi" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-03 23:01:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JZZ93cgzBS0DIN9yZz6itw
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-03 23:05:20
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:9ap7+7FrfMv9/AuSpSjHmA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -24,9 +24,10 @@ around 'create_json_submission' => sub {
     my $orig = shift;
     my $self = shift;
 
-    my $lock_file = $self->sqlite_set_lock;
     my $hpc_meta  = $self->$orig(@_);
-    $self->deploy_schema;
+
+    $self->deploy_schema_with_lock;
+    my $lock_file = $self->sqlite_set_lock;
 
     my $submission_obj = {
         submission_time => $hpc_meta->{submission_time},
@@ -85,5 +86,6 @@ around 'create_plugin_str' => sub {
 
     return $val;
 };
+
 
 1;
